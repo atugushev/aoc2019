@@ -13,4 +13,8 @@ jobs:
       with:
         go-version: 1.13.4
     - name: Run tests
-      run: ls -d day*/part*-go | xargs -I {} bash -c "cd '{}' && go test"
+      run: |
+        pwd
+        ls -alh
+        ls -d day*/part*-go
+        ls -d day*/part*-go | xargs -I {} bash -c "cd '{}' && go test"
