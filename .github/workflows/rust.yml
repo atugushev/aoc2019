@@ -1,0 +1,14 @@
+name: rust
+
+on:
+  pull_request:
+  push:
+    branches: [master]
+
+jobs:
+  tests:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v1
+    - name: Run tests
+      run: ls -d day*/part*-rs | xargs -I {} bash -c "cd '{}' && cargo test"
