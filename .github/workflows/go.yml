@@ -9,12 +9,9 @@ jobs:
   tests:
     runs-on: ubuntu-latest
     steps:
+    - uses: actions/checkout@v1
     - uses: actions/setup-go@v1
       with:
         go-version: 1.13.4
     - name: Run tests
-      run: |
-        pwd
-        ls -alh
-        ls -d day*/part*-go
-        ls -d day*/part*-go | xargs -I {} bash -c "cd '{}' && go test"
+      run: ls -d day*/part*-go | xargs -I {} bash -c "cd '{}' && go test"
