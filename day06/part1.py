@@ -1,12 +1,30 @@
 import argparse
 import sys
-from typing import List
+from collections import defaultdict
+from typing import Dict, List
 
 import pytest
 
 
+def walk(matrix: Dict[str, Dict[str, int]], x: str, steps: int) -> None:
+    if x not in matrix:
+        return
+
+    steps += 1
+    for y, v in matrix[x].items():
+        matrix[x][y] = steps
+        walk(matrix, y, steps)
+
+
 def calc(lines: str) -> int:
-    pass
+    matrix: Dict[str, Dict[str, int]] = defaultdict(dict)
+    for line in lines.strip().split("\n"):
+        left, right = line.split(")")
+        matrix[left][right] = 0
+
+    walk(matrix, "COM", 0)
+
+    return sum(matrix[x][y] for x in matrix for y in matrix[x])
 
 
 def main(argv: List[str]) -> int:
@@ -21,7 +39,7 @@ def main(argv: List[str]) -> int:
     return 0
 
 
-@pytest.mark.parametrize("s, expected", (("", None)))
+@pytest.mark.parametrize("s, expected", (("COM)B\nB)C\nB)G", 5),))
 def test(s: str, expected: int) -> None:
     assert calc(s) == expected
 
