@@ -1,3 +1,6 @@
+import argparse
+import pdb
+import sys
 from collections import deque
 from typing import Any, Deque, List
 
@@ -25,6 +28,7 @@ class Computer:
         self.halted = False
         self.debug = False
         self.opmode = 0
+        self.interactive = False
 
     def __str__(self) -> str:
         return f"{self.__class__.__name__}({self.name}) @ {self.pc}"
@@ -114,7 +118,10 @@ class Computer:
             x = self.stdin.popleft()
             self.log(f'[{self}] get "{x}" from stdin')
         else:
-            self.pause()
+            if self.interactive:
+                x = int(input("input> "))
+            else:
+                self.pause()
         self.eat_and_store(x)
 
     def opcode_4(self) -> None:
@@ -162,6 +169,14 @@ class Computer:
     def log(self, s: str) -> None:
         if self.debug:
             print(s)
+
+    def dump(self) -> None:
+        values = []
+        for i, v in enumerate(map(str, self.memory)):
+            if self.pc == i:
+                v = f"-->{i}<--"
+            values.append(v)
+        print(f"[{self}]", " ".join(values))
 
 
 lg_str = """\
@@ -222,3 +237,22 @@ def test(
         assert comp.memory == expected_memory
     if expected_stdout:
         assert comp.stdout == expected_stdout
+
+
+if __name__ == "__main__":
+    parser = argparse.ArgumentParser()
+    parser.add_argument(
+        "file", nargs="?", type=argparse.FileType("r"), default=sys.stdin
+    )
+    args = parser.parse_args(sys.argv[1:])
+
+    c = Computer()
+    c.interactive = True
+    c.read_instructions(args.file.read())
+
+    try:
+        c.run()
+    except Exception:
+        pdb.post_mortem()
+        raise
+    print(*c.stdout, sep="\n")
