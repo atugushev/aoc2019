@@ -16,4 +16,4 @@ jobs:
     - name: Install pytest
       run: pip install pytest
     - name: Run tests
-      run: pytest day*/*.py
+      run: ls -d day* | xargs -I {} bash -c "cd '{}' && PYTHONPATH=. pytest part*.py"
