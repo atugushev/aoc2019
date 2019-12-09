@@ -33,7 +33,7 @@ class Computer:
         self.interactive = True
 
     def __str__(self) -> str:
-        return f"{self.__class__.__name__}({self.name}) @ {self.pc}"
+        return f"{self.__class__.__name__}({self.name}) @ {self.pc:03d}"
 
     def __repr__(self) -> str:
         return self.__str__()
@@ -47,7 +47,7 @@ class Computer:
         self.relative_base = 0
 
     def init_memory(self, memory: List[int]) -> None:
-        self.memory = memory + [0] * 10000
+        self.memory = memory + [0] * 1000
 
     def read_instructions(self, s: str) -> None:
         self.init_memory([int(x) for x in s.split(",")])
@@ -60,13 +60,16 @@ class Computer:
     def eat_param(self) -> int:
         mode = self.eat_opmode()
         if mode == self.POS_MODE:
-            return self.memory[self.eat_memory_cell()]
+            param = self.memory[self.eat_memory_cell()]
         elif mode == self.IMM_MODE:
-            return self.eat_memory_cell()
+            param = self.eat_memory_cell()
         elif mode == self.REL_MODE:
-            return self.memory[self.relative_base + self.eat_memory_cell()]
+            param = self.memory[self.relative_base + self.eat_memory_cell()]
         else:
             raise RuntimeError(f"[{self}] unexpected mode={mode} at pc={self.pc}")
+
+        self.log(f" {param}", end="")
+        return param
 
     def eat_and_store(self, value: int) -> None:
         mode = self.eat_opmode()
@@ -79,6 +82,7 @@ class Computer:
             index = self.relative_base + self.eat_memory_cell()
         else:
             raise RuntimeError(f"[{self}] unexpected mode={mode} at pc={self.pc}")
+        self.log(f" {value}", end="")
         self.memory[index] = value
 
     def eat_opmode(self) -> int:
@@ -93,6 +97,7 @@ class Computer:
 
     def run(self) -> None:
         while True:
+            self.log(f"[{self}] ", end="")
             opcode = self.eat_opcode()
 
             try:
@@ -102,84 +107,85 @@ class Computer:
                     f"[{self}] Unexpected opcode={opcode} at pc={self.pc}"
                 )
 
+            self.log(ophandler.__doc__, end="")
             try:
                 ophandler()
             except (Halt, Pause):
                 break
+            finally:
+                self.log("")
 
     def opcode_1(self) -> None:
-        """Add"""
+        """add"""
         x = self.eat_param()
         y = self.eat_param()
         self.eat_and_store(x + y)
 
     def opcode_2(self) -> None:
-        """Mult"""
+        """mult"""
         x = self.eat_param()
         y = self.eat_param()
         self.eat_and_store(x * y)
 
     def opcode_3(self) -> None:
-        """Input"""
+        """input"""
         if self.stdin:
             x = self.stdin.popleft()
-            self.log(f'[{self}] get "{x}" from stdin')
         else:
             if self.interactive:
+                self.log("\nIntCode is awaiting an input ...")
                 x = int(input("input> "))
             else:
                 self.pause()
         self.eat_and_store(x)
 
     def opcode_4(self) -> None:
-        """Print"""
+        """print"""
         x = self.eat_param()
-        self.log(f'[{self}] print "{x}" to stdout')
         self.stdout.appendleft(x)
 
     def opcode_5(self) -> None:
-        """Jump-if-true"""
+        """jump-if-true"""
         p = self.eat_param()
         t = self.eat_param()
         if p != 0:
             self.pc = t
 
     def opcode_6(self) -> None:
-        """Jump-if-false"""
+        """jump-if-false"""
         p = self.eat_param()
         t = self.eat_param()
         if p == 0:
             self.pc = t
 
     def opcode_7(self) -> None:
-        """Less than"""
+        """less-than"""
         x = self.eat_param()
         y = self.eat_param()
         self.eat_and_store(1 if x < y else 0)
 
     def opcode_8(self) -> None:
-        """Equals"""
+        """equals"""
         x = self.eat_param()
         y = self.eat_param()
         self.eat_and_store(1 if x == y else 0)
 
     def opcode_9(self) -> None:
-        """Equals"""
+        """adj-rel-base"""
         self.relative_base += self.eat_param()
 
     def opcode_99(self) -> None:
-        self.log(f"[{self}] HALTED")
+        """halt"""
         self.halted = True
         raise Halt()
 
     def pause(self) -> None:
         self.pc -= 1
-        self.log(f"[{self}] paused")
         raise Pause()
 
-    def log(self, s: str) -> None:
+    def log(self, s: str, end: str = "\n") -> None:
         if self.debug:
-            print(s)
+            print(s, end=end)
 
     def dump(self) -> None:
         values = []
@@ -255,10 +261,15 @@ if __name__ == "__main__":
     parser.add_argument(
         "file", nargs="?", type=argparse.FileType("r"), default=sys.stdin
     )
+    parser.add_argument("--stdin", type=str, action="append")
+    parser.add_argument("--debug", action="store_true")
     args = parser.parse_args(sys.argv[1:])
 
     c = Computer()
+    c.debug = args.debug
     c.interactive = True
+    if args.stdin:
+        c.stdin = deque(map(int, args.stdin))
     c.read_instructions(args.file.read())
 
     try:
