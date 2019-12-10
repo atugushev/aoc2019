@@ -19,7 +19,15 @@ def main(argv: List[str]) -> int:
     return 0
 
 
-@pytest.mark.parametrize("s, expected", (("", None),))
+@pytest.mark.parametrize(
+    "s, expected",
+    (
+        # test cases
+        ("", None),
+        ("", None),
+        ("", None),
+    ),
+)
 def test(s: str, expected: int) -> None:
     assert solve(s) == expected
 
