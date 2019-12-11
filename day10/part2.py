@@ -39,7 +39,7 @@ def get_vaporized_asteroid(
 
     # sort in reverse order asteroids by radius
     for _, v in asteroids.items():
-        v.sort(key=lambda x: -x[0])
+        v.sort(key=lambda x: x[0], reverse=True)
 
     oid = 1
     for angle in itertools.cycle(sorted(asteroids.keys())):
