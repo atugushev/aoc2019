@@ -4,6 +4,7 @@ from collections import deque
 from typing import List, Optional
 
 import pytest
+
 from computer import Computer
 
 

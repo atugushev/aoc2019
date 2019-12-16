@@ -5,6 +5,7 @@ import sys
 from typing import Generator, List, Optional, Tuple
 
 import pytest
+
 from computer import Computer
 
 
