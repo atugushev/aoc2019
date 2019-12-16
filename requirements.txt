@@ -4,6 +4,7 @@
 #
 #    pip-compile
 #
+-e file:computer
 aspy.yaml==1.3.0          # via pre-commit
 attrs==19.3.0             # via pytest
 cfgv==2.0.1               # via pre-commit

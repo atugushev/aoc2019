@@ -14,6 +14,7 @@ def signal(lines: str, seq: Tuple[int, ...]) -> int:
     computers = []
     for i in range(5):
         comp = Computer(i)
+        comp.interactive = False
         comp.read_instructions(lines)
         comp.stdin = collections.deque([seq_deq.popleft()])
         computers.append(comp)

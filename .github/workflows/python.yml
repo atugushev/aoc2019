@@ -16,4 +16,4 @@ jobs:
     - name: Install requirements
       run: pip install -r requirements.txt
     - name: Run tests
-      run: ls -d day* | xargs -I {} bash -c "cd '{}' && PYTHONPATH=. pytest --suppress-no-test-exit-code part*.py"
+      run: pytest
