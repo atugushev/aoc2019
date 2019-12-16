@@ -15,6 +15,7 @@ pluggy==0.13.1            # via pytest
 pre-commit==1.20.0
 py==1.8.0                 # via pytest
 pyparsing==2.4.5          # via packaging
+pytest-custom-exit-code==0.3.0
 pytest==5.3.2
 pyyaml==5.2               # via aspy.yaml, pre-commit
 six==1.13.0               # via cfgv, packaging, pre-commit
