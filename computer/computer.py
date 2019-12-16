@@ -1,8 +1,7 @@
 import argparse
 import pdb
 import sys
-from collections import deque
-from typing import Any, Deque, List
+from typing import Any, List
 
 
 class Halt(Exception):
@@ -22,8 +21,8 @@ class Computer:
         self.pc = 0
         self.name = "" if name is None else name
         self.memory: List[int] = []
-        self.stdout: Deque[int] = deque()
-        self.stdin: Deque[int] = deque()
+        self.stdout: List[int] = []
+        self.stdin: List[int] = []
         self.halted = False
         self.debug = False
         self.opmode = 0
@@ -40,8 +39,8 @@ class Computer:
         self.pc = 0
         self.opmode = 0
         self.memory = []
-        self.stdout = deque()
-        self.stdin = deque()
+        self.stdout = []
+        self.stdin = []
         self.relative_base = 0
 
     def init_memory(self, memory: List[int]) -> None:
@@ -128,7 +127,7 @@ class Computer:
     def opcode_3(self) -> None:
         """input"""
         if self.stdin:
-            x = self.stdin.popleft()
+            x = self.stdin.pop(0)
         else:
             if self.interactive:
                 self.log("\nIntCode is awaiting an input ...")
@@ -140,7 +139,7 @@ class Computer:
     def opcode_4(self) -> None:
         """print"""
         x = self.eat_param()
-        self.stdout.appendleft(x)
+        self.stdout.append(x)
 
     def opcode_5(self) -> None:
         """jump-if-true"""
@@ -207,7 +206,7 @@ if __name__ == "__main__":
     c.debug = args.debug
     c.interactive = True
     if args.stdin:
-        c.stdin = deque(map(int, args.stdin))
+        c.stdin = [int(x) for x in args.stdin]
     c.read_instructions(args.file.read())
 
     try:

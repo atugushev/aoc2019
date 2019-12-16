@@ -1,6 +1,5 @@
 import argparse
 import sys
-from collections import deque
 from typing import List, Optional
 
 import pytest
@@ -9,16 +8,16 @@ from computer import Computer
 
 
 def signal(lines: str, seq: List[int]) -> int:
-    seq_deq = deque(seq)
+    seq_list = list(seq)
     output = 0
     computer = Computer()
     computer.read_instructions(lines)
     memory = computer.memory[:]
-    while seq_deq:
-        inp = seq_deq.popleft()
+    while seq_list:
+        inp = seq_list.pop(0)
         computer.reset()
         computer.init_memory(memory)
-        computer.stdin = deque([inp, output])
+        computer.stdin = [inp, output]
         computer.run()
         assert len(computer.stdout) == 1
         output = computer.stdout[0]

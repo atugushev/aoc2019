@@ -1,5 +1,4 @@
 import argparse
-import collections
 import itertools
 import sys
 from typing import Generator, List, Optional, Tuple
@@ -10,13 +9,13 @@ from computer import Computer
 
 
 def signal(lines: str, seq: Tuple[int, ...]) -> int:
-    seq_deq = collections.deque(seq)
+    seq_list = list(seq)
     computers = []
     for i in range(5):
         comp = Computer(i)
         comp.interactive = False
         comp.read_instructions(lines)
-        comp.stdin = collections.deque([seq_deq.popleft()])
+        comp.stdin = [seq_list.pop(0)]
         computers.append(comp)
 
     out = 0

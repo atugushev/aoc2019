@@ -1,4 +1,3 @@
-from collections import deque
 from typing import List
 
 import pytest
@@ -57,9 +56,9 @@ def test(
     comp = Computer()
     comp.init_memory(memory[:])
     if stdin:
-        comp.stdin = deque(stdin)
+        comp.stdin = stdin[:]
     comp.run()
     if expected_memory:
         assert comp.memory[: len(expected_memory)] == expected_memory
     if expected_stdout:
-        assert comp.stdout == deque(expected_stdout)
+        assert comp.stdout == expected_stdout[:]
