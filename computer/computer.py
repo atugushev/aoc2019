@@ -29,6 +29,12 @@ class Computer:
         self.relative_base = 0
         self.interactive = True
 
+    def stdout_handler(self, x):
+        pass
+
+    def stdin_handler(self):
+        pass
+
     def __str__(self) -> str:
         return f"{self.__class__.__name__}({self.name}) @ {self.pc:03d}"
 
@@ -126,12 +132,20 @@ class Computer:
 
     def opcode_3(self) -> None:
         """input"""
+        self.stdin_handler()
         if self.stdin:
             x = self.stdin.pop(0)
         else:
             if self.interactive:
                 self.log("\nIntCode is awaiting an input ...")
-                x = int(input("input> "))
+                x = None
+                while x is None:
+                    try:
+                        x = int(input("input> "))
+                    except ValueError:
+                        x = None
+                        print("Incorrect input! Enter a number.")
+
             else:
                 self.pause()
         self.eat_and_store(x)
@@ -140,6 +154,7 @@ class Computer:
         """print"""
         x = self.eat_param()
         self.stdout.append(x)
+        self.stdout_handler(x)
 
     def opcode_5(self) -> None:
         """jump-if-true"""
