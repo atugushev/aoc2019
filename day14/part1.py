@@ -18,47 +18,57 @@ class Chemical:
         qty, name = s.strip().split(" ")
         return cls(name.strip(), int(qty.strip()))
 
-    @classmethod
-    def from_string_comma_list(cls, s: str) -> Tuple["Chemical", ...]:
-        return tuple(cls.from_string(c) for c in s.split(","))
-
     def __add__(self, other: int):
         assert self.name == other.name
         return type(self)(name=self.name, qty=self.qty + other.qty)
 
+@dataclasses.dataclass(frozen=True)
+class Reaction:
+    name: str
+    qty: int
+    chemicals: List[Chemical]
 
-def search(inputs, chemicals, node, outputs_qty, mult):
-    for child in chemicals[node]:
+    @classmethod
+    def from_string(cls, s: str) -> "Reaction":
+        in_, out = s.split("=>")
+        in_chem = Chemical.from_string(out)
+        return cls(
+            name=in_chem.name,
+            qty=in_chem.qty,
+            chemicals = tuple(Chemical.from_string(c) for c in in_.split(",")),
+        )
+
+
+def search(inputs, reactions, node, outputs_qty, mult):
+    for child in reactions[node].chemicals:
         if child.name in inputs:
-            outputs_qty[child.name] += child.qty * mult
+            outputs_qty[child.name] += child.qty * math.ceil(mult / reactions[node].qty)
         else:
-            search(inputs, chemicals, child.name, outputs_qty, mult * child.qty)
+            search(inputs, reactions, child.name, outputs_qty, mult * child.qty)
 
 
 def solve(lines: str) -> int:
-    chemicals: Dict[str, Tuple[Chemical, ...]] = {}
+    reactions: Dict[str, Tuple[Chemical, ...]] = {}
     inputs: Dict[str, Tuple[Chemical, ...]] = {}
     for line in lines.strip().split("\n"):
-        in_, out = line.split("=>")
-        in_chem = Chemical.from_string(out)
-        chemicals[in_chem.name] = [
-            Chemical(c.name, c.qty) for c in Chemical.from_string_comma_list(in_)
-        ]
+        reaction = Reaction.from_string(line)
+        reactions[reaction.name] = reaction
 
-        if chemicals[in_chem.name][0].name == "ORE":
-            assert len(chemicals[in_chem.name]) == 1
-            inputs[in_chem.name] = [in_chem, chemicals[in_chem.name][0]]
+        if reaction.chemicals[0].name == "ORE":
+            assert len(reaction.chemicals) == 1
+            inputs[reaction.name] = reaction
 
-    print(chemicals)
+    print(reactions)
+    print(inputs)
+
 
     outputs_qty = collections.defaultdict(int)
-    breakpoint()
-    search(inputs, chemicals, "FUEL", outputs_qty, 1)
+    search(inputs, reactions, "FUEL", outputs_qty, 1)
     print("in", inputs)
     print("out", outputs_qty)
 
     return sum(
-        math.ceil(qty / inputs[name][0].qty) * inputs[name][1].qty
+        math.ceil(qty / inputs[name].qty) * inputs[name].chemicals[0].qty
         for name, qty in outputs_qty.items()
     )
 
@@ -73,16 +83,16 @@ def main(argv: List[str]) -> int:
     return 0
 
 
-reactions1 = """\
+r1 = """\
 10 ORE => 10 A
 1 ORE => 1 B
 7 A, 1 B => 1 C
 7 A, 1 C => 1 D
-7 A, 1 D => 2 E
+7 A, 1 D => 1 E
 1 E, 7 A => 1 FUEL
 """
 
-reactions2 = """\
+r2 = """\
 9 ORE => 2 A
 8 ORE => 3 B
 7 ORE => 5 C
@@ -92,7 +102,7 @@ reactions2 = """\
 2 AB, 3 BC, 4 CA => 1 FUEL
 """
 
-reactions3 = """\
+r3 = """\
 157 ORE => 5 NZVS
 165 ORE => 6 DCFZ
 44 XJWVT, 5 KHKGT, 1 QDVJ, 29 NZVS, 9 GPVTF, 48 HKGWZ => 1 FUEL
@@ -104,15 +114,31 @@ reactions3 = """\
 3 DCFZ, 7 NZVS, 5 HKGWZ, 10 PSHF => 8 KHKGT
 """
 
+r4 = """\
+2 VPVL, 7 FWMGM, 2 CXFTF, 11 MNCFX => 1 STKFG
+17 NVRVD, 3 JNWZP => 8 VPVL
+53 STKFG, 6 MNCFX, 46 VJHF, 81 HVMC, 68 CXFTF, 25 GNMV => 1 FUEL
+22 VJHF, 37 MNCFX => 5 FWMGM
+139 ORE => 4 NVRVD
+144 ORE => 7 JNWZP
+5 MNCFX, 7 RFSQX, 2 FWMGM, 2 VPVL, 19 CXFTF => 3 HVMC
+5 VJHF, 7 MNCFX, 9 VPVL, 37 CXFTF => 6 GNMV
+145 ORE => 6 MNCFX
+1 NVRVD => 8 CXFTF
+1 VJHF, 6 MNCFX => 4 RFSQX
+176 ORE => 6 VJHF
+"""
+
+
 
 @pytest.mark.parametrize(
     "s, expected",
     (
         # test cases
-        (reactions1, 31),
-        (reactions2, 165),
-        (reactions3, 13312),
-        # ("", None),
+        (r1, 31),
+        (r2, 165),
+        (r3, 13312),
+        (r4, 180697),
     ),
 )
 def test(s: str, expected: int) -> None:
